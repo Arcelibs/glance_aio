@@ -1,95 +1,97 @@
-# Glance + RSSHub container deployment
+# Glance + RSSHub image publishing
 
-這個 repo 只負責把 Glance config 和自訂 RSSHub 打包成容器 image，推到 GitHub Container Registry，然後透過 SSH 更新 VPS 上的 containers。
+這個 repo 只負責測試、build，並把 Glance 與自訂 RSSHub 推到 GitHub Container Registry。實際部署由家裡 Linux VM 上的 Cloudflare Tunnel 和 Watchtower 處理，不需要 VPS、公網 IP、Caddy、SSH deploy，也不需要在機器上 clone 這個 repo。
 
-Caddy 反向代理請放在另一個 proxy repo 管理，並讓 Caddy 與本 repo 的 containers 共用同一個 Docker network：`arcelibs-proxy`。
+## Images
 
-## 架構
-
-```text
-Cloudflare DNS
-  -> VPS public IP
-    -> Caddy repo :80/:443
-      -> glance container:8080
-      -> rsshub container:1200
-```
-
-本 repo 不需要在 VPS clone，也不需要 VPS 上放 `.env` 或 compose file。
-
-## 目錄
+GitHub Actions 會發布：
 
 ```text
-.
-├── glance/
-│   ├── Dockerfile
-│   └── data/glance.yml
-├── rsshub/
-│   ├── Dockerfile
-│   ├── package.json
-│   ├── lib/
-│   └── test/
-└── .github/workflows/deploy.yml
+ghcr.io/arcelibs/glance_aio/glance:latest
+ghcr.io/arcelibs/glance_aio/rsshub:latest
 ```
 
-## GitHub Secrets
+建議把 GHCR packages 設為 public，這樣家裡 VM 和 Watchtower 不需要登入 GHCR。
 
-在這個 repo 設定：
+## 家裡 VM 初次啟動
 
-- `VPS_HOST`
-- `VPS_PORT`
-- `VPS_USER`
-- `VPS_SSH_KEY`
-- `RSSHUB_ACCESS_KEY`
+建立共用 Docker network：
 
-`RSSHUB_ACCESS_KEY` 要和 `glance/data/glance.yml` 裡 RSSHub feed URL 的 `key=...` 一致。
-
-## 部署流程
-
-push 到 `main` 後，GitHub Actions 會：
-
-1. 跑 RSSHub 測試。
-2. Build 並 push images：
-   - `ghcr.io/<owner>/<repo>/glance:latest`
-   - `ghcr.io/<owner>/<repo>/rsshub:latest`
-3. SSH 到 VPS。
-4. 自動建立 `arcelibs-proxy` network，如果不存在。
-5. Pull 最新 images。
-6. 重建 `glance` 和 `rsshub` containers。
-
-VPS 不需要先建立 `/opt/apps/glance`。
-
-## VPS 需求
-
-VPS 只需要安裝 Docker，並允許 GitHub Actions 用 SSH 連線。workflow 會在每次部署時用 GitHub token 登入 GHCR，所以不需要先在 VPS clone repo、建立 compose file，或手動 docker login。
-
-## Proxy repo 需要的 Caddy 設定
-
-另一個 Caddy/proxy repo 的 `Caddyfile` 可加入：
-
-```caddyfile
-glance.arcelibs.com {
-    reverse_proxy glance:8080
-}
-
-rss.arcelibs.com {
-    reverse_proxy rsshub:1200
-}
+```bash
+docker network create arcelibs
 ```
 
-Caddy container 也要加入同一個 external network：
+啟動 Glance：
 
-```yaml
-networks:
-  proxy:
-    external: true
-    name: arcelibs-proxy
+```bash
+docker run -d \
+  --name glance \
+  --restart unless-stopped \
+  --network arcelibs \
+  -v /etc/timezone:/etc/timezone:ro \
+  -v /etc/localtime:/etc/localtime:ro \
+  ghcr.io/arcelibs/glance_aio/glance:latest
 ```
 
-## RSSHub access key
+啟動 RSSHub：
 
-舊 key 已經出現在原本的 repo 檔案中，請改用新 key。
+```bash
+docker run -d \
+  --name rsshub \
+  --restart unless-stopped \
+  --network arcelibs \
+  -e NODE_ENV=production \
+  -e CACHE_TYPE=memory \
+  -e CACHE_EXPIRE=600 \
+  ghcr.io/arcelibs/glance_aio/rsshub:latest
+```
 
-更新 key 時需要同步改兩個地方：
+啟動 Watchtower，自動更新這兩個 containers：
 
-- GitHub secret `RSSHUB_ACCESS_KEY`
-- `glance/data/glance.yml` 裡 RSSHub feed URL 的 `key=...`
+```bash
+docker run -d \
+  --name watchtower \
+  --restart unless-stopped \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  containrrr/watchtower \
+  glance rsshub \
+  --interval 300 \
+  --cleanup
+```
+
+## Cloudflare Tunnel
+
+在 Cloudflare Zero Trust 建立 Tunnel，並用 cloudflared container 跑在同一個 Docker network。
+
+Public Hostnames 設定：
+
+```text
+glance.arcelibs.com -> http://glance:8080
+rss.arcelibs.com    -> http://rsshub:1200
+```
+
+cloudflared container 也要加入同一個 network：
+
+```bash
+docker network connect arcelibs cloudflared
+```
+
+如果是用 Cloudflare 後台提供的 docker run 指令啟動 tunnel，請加上：
+
+```bash
+--network arcelibs
+```
+
+## GitHub Actions
+
+push 到 `main` 後會執行：
+
+1. RSSHub tests
+2. build/push Glance image
+3. build/push RSSHub image
+
+不需要任何 VPS SSH secrets。
+
+## RSSHub Key
+
+目前不使用 RSSHub query key。Cloudflare Tunnel 是唯一公開入口；如果之後需要限制存取，建議用 Cloudflare Access 或 Tunnel policy，而不是把 key 寫進 Glance config。
