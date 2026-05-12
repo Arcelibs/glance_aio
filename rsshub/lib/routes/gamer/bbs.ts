@@ -7,11 +7,11 @@ const BASE_URL = 'https://forum.gamer.com.tw';
 
 export const route: Route = {
     path: '/bbs/:bsn',
-    name: '哈啦板',
+    name: 'Bahamut board',
     maintainers: ['jimmy'],
     example: '/gamer/bbs/60030',
     parameters: {
-        bsn: '看板編號，可從板塊網址 B.php?bsn=XXXXX 取得',
+        bsn: 'Board ID from B.php?bsn=XXXXX',
     },
     features: {
         requireConfig: false,
@@ -49,8 +49,6 @@ async function handler(ctx) {
         .filter((el) => !$(el).hasClass('b-list__row--sticky'))
         .map((el, index) => {
             const row = $(el);
-
-            // 主連結（C.php，排除 last=1 的最新回覆連結）
             const mainLink = row
                 .find('a[href^="C.php"]')
                 .toArray()
@@ -62,14 +60,10 @@ async function handler(ctx) {
 
             const href = $(mainLink).attr('href') ?? '';
             const fullUrl = `${BASE_URL}/${href}`;
-
-            const title = row.find('p.b-list__main__title').text().trim() || '(無標題)';
+            const title = row.find('p.b-list__main__title').text().trim() || '(no title)';
             const brief = row.find('p.b-list__brief').text().trim();
             const thumbnail = row.find('div.b-list__img').attr('data-thumbnail') ?? '';
-
-            const description = thumbnail
-                ? `<img src="${thumbnail}" /><br/>${brief}`
-                : brief;
+            const description = thumbnail ? `<img src="${thumbnail}" /><br/>${brief}` : brief;
 
             return {
                 title,

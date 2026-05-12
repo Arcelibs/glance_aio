@@ -7,11 +7,11 @@ const BASE_URL = 'https://bbs.nga.cn';
 
 export const route: Route = {
     path: '/forum/:fid',
-    name: 'NGA 板塊（輕量版）',
+    name: 'NGA forum',
     maintainers: ['jimmy'],
     example: '/nga-light/forum/854',
     parameters: {
-        fid: '板塊 ID，從網址 thread.php?fid=XXXXX 取得',
+        fid: 'Forum ID from thread.php?fid=XXXXX',
     },
     features: {
         requireConfig: false,
@@ -48,7 +48,7 @@ async function handler(ctx) {
         .filter((t) => t.tid)
         .map((t) => {
             const tid = t.tid as string;
-            const subject = (t.subject as string) ?? '(無標題)';
+            const subject = (t.subject as string) ?? '(no title)';
             const postdate = t.postdate as number;
 
             return {

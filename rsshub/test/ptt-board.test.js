@@ -1,8 +1,3 @@
-/**
- * 驗證 PTT 看板解析邏輯
- * 直接抓取 PTT 頁面，測試核心爬取與解析行為
- */
-
 import { load } from 'cheerio';
 
 const BASE_URL = 'https://www.ptt.cc';
@@ -17,9 +12,13 @@ function parseArticles(html) {
         .map((el) => {
             const row = $(el);
             const link = row.find('.title a');
-            if (!link.length) return null;
+
+            if (!link.length) {
+                return null;
+            }
 
             const href = link.attr('href') ?? '';
+
             return {
                 title: link.text().trim(),
                 link: `${BASE_URL}${href}`,
@@ -41,10 +40,11 @@ function assert(condition, message) {
 }
 
 async function run() {
-    console.log(`\n測試：PTT 看板 (board=${TEST_BOARD})\n`);
+    console.log(`\nTest PTT board parsing (board=${TEST_BOARD})\n`);
 
     const url = `${BASE_URL}/bbs/${TEST_BOARD}/index.html`;
     let html;
+
     try {
         const resp = await fetch(url, {
             headers: {
@@ -52,25 +52,25 @@ async function run() {
                 Cookie: 'over18=1',
             },
         });
-        assert(resp.ok, `HTTP ${resp.status} - 頁面可正常存取`);
+
+        assert(resp.ok, `HTTP ${resp.status} - source page is reachable`);
         html = await resp.text();
     } catch (e) {
-        console.warn(`  SKIP: 無法連線至 PTT（可能 IP 被封鎖）- ${e.message}`);
-        console.log('\n測試跳過（網路限制）。\n');
+        console.warn(`  SKIP: cannot reach PTT - ${e.message}`);
         process.exit(0);
     }
 
     const { boardTitle, items } = parseArticles(html);
 
-    assert(boardTitle.length > 0, `看板標題不為空（${boardTitle}）`);
-    assert(items.length > 0, `解析到至少一篇文章（共 ${items.length} 篇）`);
+    assert(boardTitle.length > 0, `board title is present: ${boardTitle}`);
+    assert(items.length > 0, `parsed article count is greater than zero: ${items.length}`);
 
     const firstItem = items[0];
-    assert(firstItem.title.length > 0, `第一篇標題不為空（${firstItem.title}）`);
-    assert(firstItem.link.startsWith(BASE_URL), `文章連結格式正確（${firstItem.link}）`);
-    assert(firstItem.author.length > 0, `第一篇作者不為空（${firstItem.author}）`);
+    assert(firstItem.title.length > 0, `first item title is present: ${firstItem.title}`);
+    assert(firstItem.link.startsWith(BASE_URL), `first item link is absolute: ${firstItem.link}`);
+    assert(firstItem.author.length > 0, `first item author is present: ${firstItem.author}`);
 
-    console.log(`\n全部測試通過。\n`);
+    console.log('\nPTT parser test completed.\n');
 }
 
 run();
