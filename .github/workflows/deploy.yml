@@ -1,0 +1,132 @@
+name: Build and Deploy Glance Services
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "glance/**"
+      - "rsshub/**"
+      - ".github/workflows/deploy.yml"
+  workflow_dispatch:
+
+jobs:
+  test-rsshub:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: rsshub
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Test Bahamut BBS route parsing
+        run: npm test
+
+      - name: Test PTT board route parsing
+        run: node test/ptt-board.test.js
+
+  build:
+    runs-on: ubuntu-latest
+    needs: test-rsshub
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      glance_image: ${{ steps.images.outputs.glance_image }}
+      rsshub_image: ${{ steps.images.outputs.rsshub_image }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare image names
+        id: images
+        shell: bash
+        run: |
+          owner="$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')"
+          repo="$(echo '${{ github.event.repository.name }}' | tr '[:upper:]' '[:lower:]')"
+          echo "glance_image=ghcr.io/${owner}/${repo}/glance:latest" >> "$GITHUB_OUTPUT"
+          echo "rsshub_image=ghcr.io/${owner}/${repo}/rsshub:latest" >> "$GITHUB_OUTPUT"
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Glance image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./glance
+          push: true
+          tags: ${{ steps.images.outputs.glance_image }}
+
+      - name: Build and push RSSHub image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./rsshub
+          push: true
+          tags: ${{ steps.images.outputs.rsshub_image }}
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Prepare SSH
+        shell: bash
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -p "${{ secrets.VPS_PORT }}" "${{ secrets.VPS_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Deploy with Docker Compose
+        shell: bash
+        env:
+          GLANCE_IMAGE: ${{ needs.build.outputs.glance_image }}
+          RSSHUB_IMAGE: ${{ needs.build.outputs.rsshub_image }}
+          RSSHUB_ACCESS_KEY: ${{ secrets.RSSHUB_ACCESS_KEY }}
+          GHCR_USER: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ssh -i ~/.ssh/id_ed25519 -p "${{ secrets.VPS_PORT }}" "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" \
+            "GLANCE_IMAGE='$GLANCE_IMAGE' RSSHUB_IMAGE='$RSSHUB_IMAGE' RSSHUB_ACCESS_KEY='$RSSHUB_ACCESS_KEY' GHCR_USER='$GHCR_USER' GHCR_TOKEN='$GHCR_TOKEN' bash -s" <<'EOF'
+          set -e
+
+          docker network inspect arcelibs-proxy >/dev/null 2>&1 || docker network create arcelibs-proxy
+
+          echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+
+          docker pull "$GLANCE_IMAGE"
+          docker pull "$RSSHUB_IMAGE"
+
+          docker rm -f glance >/dev/null 2>&1 || true
+          docker rm -f rsshub >/dev/null 2>&1 || true
+
+          docker run -d \
+            --name glance \
+            --restart unless-stopped \
+            --network arcelibs-proxy \
+            -v /etc/timezone:/etc/timezone:ro \
+            -v /etc/localtime:/etc/localtime:ro \
+            "$GLANCE_IMAGE"
+
+          docker run -d \
+            --name rsshub \
+            --restart unless-stopped \
+            --network arcelibs-proxy \
+            -e NODE_ENV=production \
+            -e CACHE_TYPE=memory \
+            -e CACHE_EXPIRE=600 \
+            -e ACCESS_KEY="$RSSHUB_ACCESS_KEY" \
+            "$RSSHUB_IMAGE"
+          EOF

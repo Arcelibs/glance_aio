@@ -1,0 +1,12 @@
+{
+  "name": "rsshub-arcelibs",
+  "version": "1.0.0",
+  "description": "Custom RSSHub routes",
+  "type": "module",
+  "scripts": {
+    "test": "node test/bbs.test.js"
+  },
+  "dependencies": {
+    "cheerio": "^1.0.0"
+  }
+}

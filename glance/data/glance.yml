@@ -1,0 +1,195 @@
+document:
+  head: |
+    <script defer src="https://umami.arcelibs.com/stats" data-website-id="36e776e6-3d77-4022-aeac-4aadb36aa700"></script>
+
+pages:
+  - name: Home
+    columns:
+      - size: small
+        widgets:
+          - type: calendar
+
+          - type: search
+            search-engine: google
+            autofocus: true
+
+
+          - type: group
+            widgets:
+              - type: rss
+                title: PTT - PC_Shopping
+                limit: 15
+                collapse-after: 5
+                cache: 30m
+                feeds:
+                  - url: https://rss.arcelibs.com/ptt/board/PC_Shopping?key=CHANGE_ME_RSSHUB_ACCESS_KEY
+
+              - type: rss
+                title: PTT - C_Chat
+                limit: 15
+                collapse-after: 5
+                cache: 15m
+                feeds:
+                  - url: https://rss.arcelibs.com/ptt/board/C_Chat?key=CHANGE_ME_RSSHUB_ACCESS_KEY
+
+
+      - size: full
+        widgets:
+          - type: rss
+            style: detailed-list
+            limit: 10
+            collapse-after: 3
+            cache: 15m
+            feeds:
+              - url: https://feeds.feedburner.com/ettoday/realtime
+                title: ETtoday 新聞雲
+
+          - type: videos
+            channels:
+              - UCvuA4549GHcE4ayCVcesQFw
+              - UCeUJO1H3TEXu2syfAAPjYKQ
+              - UCuHHKbwC0TWjeqxbqdO-N_g
+              - UCD_cg9Tak9SvlPHRsWxUIpA
+
+          - type: rss
+            title: 巴哈姆特 - 電腦應用綜合討論
+            style: detailed-list
+            limit: 10
+            collapse-after: 3
+            cache: 15m
+            feeds:
+              - url: https://rss.arcelibs.com/gamer/bbs/60030?key=CHANGE_ME_RSSHUB_ACCESS_KEY
+
+      - size: small
+        widgets:
+          - type: weather
+            location: Taipei, Taiwan
+
+          - type: markets
+            title: 匯率
+            markets:
+              - symbol: TWDJPY=X
+                name: 台幣 → 日幣
+              - symbol: TWDCNY=X
+                name: 台幣 → 人民幣
+              - symbol: JPYTWD=X
+                name: 日幣 → 台幣
+              - symbol: JPYCNY=X
+                name: 日幣 → 人民幣
+              - symbol: CNYTWD=X
+                name: 人民幣 → 台幣
+              - symbol: CNYJPY=X
+                name: 人民幣 → 日幣
+
+          - type: bookmarks
+            groups:
+              - title: 個人網站
+                links:
+                  - title: Arcelibs Blog
+                    url: https://blog.arcelibs.com/
+                    icon: si:blogger
+
+          - type: rss
+            title: 博客文章
+            limit: 5
+            collapse-after: 3
+            cache: 1h
+            feeds:
+              - url: https://blog.arcelibs.com/rss.xml
+
+
+  - name: Games
+    columns:
+      - size: full
+        widgets:
+          - type: rss
+            title: 巴哈姆特 - 鳴潮
+            style: detailed-list
+            limit: 10
+            collapse-after: 3
+            cache: 15m
+            feeds:
+              - url: https://rss.arcelibs.com/gamer/bbs/74934?key=CHANGE_ME_RSSHUB_ACCESS_KEY
+
+          - type: rss
+            title: 巴哈姆特 - 明日方舟：終末地
+            style: detailed-list
+            limit: 10
+            collapse-after: 3
+            cache: 15m
+            feeds:
+              - url: https://rss.arcelibs.com/gamer/bbs/74604?key=CHANGE_ME_RSSHUB_ACCESS_KEY
+
+      - size: small
+        widgets:
+          - type: rss
+            title: NGA - 鳴潮
+            limit: 15
+            collapse-after: 5
+            cache: 15m
+            feeds:
+              - url: https://rss.arcelibs.com/nga-light/forum/854?key=CHANGE_ME_RSSHUB_ACCESS_KEY&s2t=1
+
+          - type: rss
+            title: NGA - 明日方舟：終末地
+            limit: 15
+            collapse-after: 5
+            cache: 15m
+            feeds:
+              - url: https://rss.arcelibs.com/nga-light/forum/846?key=CHANGE_ME_RSSHUB_ACCESS_KEY&s2t=1
+
+      - size: small
+        widgets:
+          - type: rss
+            title: 4Gamers 遊戲新聞
+            style: compact
+            limit: 10
+            collapse-after: 5
+            cache: 30m
+            feeds:
+              - url: https://www.4gamers.com.tw/rss/latest-news
+
+  - name: Services
+    columns:
+      - size: small
+        widgets:
+          - type: monitor
+            title: 外部服務
+            sites:
+              - title: Claude
+                url: https://status.anthropic.com
+              - title: GitHub
+                url: https://githubstatus.com
+              - title: Cloudflare
+                url: https://www.cloudflarestatus.com
+              - title: RSSHub
+                url: https://rss.arcelibs.com
+
+
+      - size: full
+        widgets:
+          - type: bookmarks
+            groups:
+              - title: 資訊
+                links:
+                  - title: Glance
+                    url: https://glance.arcelibs.com
+                    icon: si:glance
+                  - title: Memos
+                    url: http://192.168.50.100:5230
+                    icon: si:obsidian
+              - title: 開發
+                links:
+                  - title: GitHub
+                    url: https://github.com
+                    icon: si:github
+                  - title: RSSHub
+                    url: https://rss.arcelibs.com
+                    icon: si:rss
+              - title: 工具
+                links:
+                  - title: Wallos
+                    url: http://192.168.50.100:8282
+                    icon: si:googleplay
+
+
