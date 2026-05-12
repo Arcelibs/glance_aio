@@ -11,7 +11,7 @@ ghcr.io/arcelibs/glance_aio/glance:latest
 ghcr.io/arcelibs/glance_aio/rsshub:latest
 ```
 
-Images 會同時支援 `linux/amd64` 和 `linux/arm64`，所以 x86 VPS 和 Mac mini M4 都能直接拉同一個 `latest`。
+Images 目前只發布 `linux/amd64`，適合一般 x86 Ubuntu Server / VPS。若未來要跑 ARM64 主機，再另外開啟 multi-arch build。
 
 建議把 GHCR packages 設為 public，這樣家裡 VM 和 Watchtower 不需要登入 GHCR。
 
