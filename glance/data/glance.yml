@@ -30,7 +30,7 @@ pages:
                 collapse-after: 5
                 cache: 15m
                 feeds:
-                  - url: https://rss.arcelibs.com/ptt/board/C_Chat?key=CHANGE_ME_RSSHUB_ACCESS_KEY
+                  - url: https://rss.arcelibs.com/ptt/board/C_Chat?key=8965@RFV!
 
 
       - size: full
@@ -58,7 +58,7 @@ pages:
             collapse-after: 3
             cache: 15m
             feeds:
-              - url: https://rss.arcelibs.com/gamer/bbs/60030?key=CHANGE_ME_RSSHUB_ACCESS_KEY
+              - url: https://rss.arcelibs.com/gamer/bbs/60030?key=8965@RFV!
 
       - size: small
         widgets:
@@ -109,7 +109,7 @@ pages:
             collapse-after: 3
             cache: 15m
             feeds:
-              - url: https://rss.arcelibs.com/gamer/bbs/74934?key=CHANGE_ME_RSSHUB_ACCESS_KEY
+              - url: https://rss.arcelibs.com/gamer/bbs/74934?key=8965@RFV!
 
           - type: rss
             title: 巴哈姆特 - 明日方舟：終末地
@@ -118,7 +118,7 @@ pages:
             collapse-after: 3
             cache: 15m
             feeds:
-              - url: https://rss.arcelibs.com/gamer/bbs/74604?key=CHANGE_ME_RSSHUB_ACCESS_KEY
+              - url: https://rss.arcelibs.com/gamer/bbs/74604?key=8965@RFV!
 
       - size: small
         widgets:
@@ -128,7 +128,7 @@ pages:
             collapse-after: 5
             cache: 15m
             feeds:
-              - url: https://rss.arcelibs.com/nga-light/forum/854?key=CHANGE_ME_RSSHUB_ACCESS_KEY&s2t=1
+              - url: https://rss.arcelibs.com/nga-light/forum/854?key=8965@RFV!&s2t=1
 
           - type: rss
             title: NGA - 明日方舟：終末地
@@ -136,7 +136,7 @@ pages:
             collapse-after: 5
             cache: 15m
             feeds:
-              - url: https://rss.arcelibs.com/nga-light/forum/846?key=CHANGE_ME_RSSHUB_ACCESS_KEY&s2t=1
+              - url: https://rss.arcelibs.com/nga-light/forum/846?key=8965@RFV!&s2t=1
 
       - size: small
         widgets:
