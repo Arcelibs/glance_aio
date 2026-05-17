@@ -3,7 +3,7 @@ FROM node:22-alpine
 WORKDIR /app
 
 # Fetch RSSHub source, then inject custom routes.
-RUN apk add --no-cache git build-base python3 && \
+RUN apk add --no-cache git && \
     git clone --depth 1 https://github.com/DIYgod/RSSHub .
 
 COPY lib/routes/gamer/ lib/routes/gamer/

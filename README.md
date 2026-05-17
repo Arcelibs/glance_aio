@@ -11,48 +11,9 @@ ghcr.io/arcelibs/glance_aio/glance:latest
 ghcr.io/arcelibs/glance_aio/rsshub:latest
 ```
 
-Images 會發布 `linux/amd64` 和 `linux/arm64`，適合一般 x86 Ubuntu Server / VPS，也可以原生跑在 Apple Silicon，例如 Mac mini M4。
+Images 目前只發布 `linux/amd64`，適合一般 x86 Ubuntu Server / VPS。Apple Silicon Mac 可以透過 Docker Desktop emulation 跑 amd64 image，但不建議當主要部署方式。
 
 建議把 GHCR packages 設為 public，這樣家裡 VM 和 Watchtower 不需要登入 GHCR。
-
-## Mac mini M4 本機啟動
-
-Mac mini M4 是 ARM64，建議使用 multi-arch image 原生執行，不需要加 `--platform linux/amd64`。macOS 沒有 Linux VM 常用的 `/etc/timezone` 和 `/etc/localtime` 掛載方式，建議改用 `TZ` 環境變數。
-
-建立共用 Docker network：
-
-```bash
-docker network create arcelibs
-```
-
-啟動 Glance：
-
-```bash
-docker run -d \
-  --name glance \
-  --restart unless-stopped \
-  --network arcelibs \
-  -e TZ=Asia/Taipei \
-  -p 8080:8080 \
-  ghcr.io/arcelibs/glance_aio/glance:latest
-```
-
-啟動 RSSHub：
-
-```bash
-docker run -d \
-  --name rsshub \
-  --restart unless-stopped \
-  --network arcelibs \
-  -e NODE_ENV=production \
-  -e CACHE_TYPE=memory \
-  -e CACHE_EXPIRE=600 \
-  -e TZ=Asia/Taipei \
-  -p 1200:1200 \
-  ghcr.io/arcelibs/glance_aio/rsshub:latest
-```
-
-如果是接 Cloudflare Tunnel，可以移除 `-p`，並讓 `cloudflared` 加入同一個 `arcelibs` network。
 
 ## 家裡 VM 初次啟動
 
